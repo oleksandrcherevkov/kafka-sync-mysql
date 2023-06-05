@@ -1,0 +1,66 @@
+version: "2"
+services:
+  zookeeper:
+    image: quay.io/debezium/zookeeper
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    networks:
+      - kafka-net
+    container_name: zookeeper
+  kafka:
+    image: quay.io/debezium/kafka
+    ports:
+      - 9092:9092
+    environment:
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+    networks:
+      - kafka-net
+    container_name: kafka
+    depends_on:
+      - zookeeper
+  mysql-main:
+    image: quay.io/debezium/example-mysql
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_USER=mysqluser
+      - MYSQL_PASSWORD=secret
+    networks:
+      - kafka-net
+    container_name: mysql-main
+  mysql-replica:
+    image: quay.io/debezium/example-mysql
+    ports:
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_USER=mysqluser
+      - MYSQL_PASSWORD=secret
+    networks:
+      - kafka-net
+    container_name: mysql-replica
+  connect:
+    build: .
+    ports:
+      - 8083:8083
+    networks:
+      - kafka-net
+    container_name: connect
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=1
+      - CONNECT_PLUGIN_PATH=/kafka/connect, /home/kafka/.local/libs
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_source_connect_statuses
+    depends_on:
+      - kafka
+      - mysql-main
+
+networks:
+  kafka-net:
+    name: kafka-net
+    driver: bridge
