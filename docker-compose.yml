@@ -15,6 +15,7 @@ services:
       - 9092:9092
     environment:
       - ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
     networks:
       - kafka-net
     container_name: kafka
@@ -31,17 +32,17 @@ services:
     networks:
       - kafka-net
     container_name: mysql-main
-  mysql-replica:
-    image: quay.io/debezium/example-mysql
+  mongo-replica:
+    image: mongo
+    restart: always
     ports:
-      - 3307:3306
+      - 27017:27017
     environment:
-      - MYSQL_ROOT_PASSWORD=secret
-      - MYSQL_USER=mysqluser
-      - MYSQL_PASSWORD=secret
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     networks:
       - kafka-net
-    container_name: mysql-replica
+    container_name: mongo-replica
   connect:
     build: .
     ports:
@@ -50,12 +51,22 @@ services:
       - kafka-net
     container_name: connect
     environment:
+      - CONNECT_BOOTSTRAP_SERVERS=kafka:9092
       - BOOTSTRAP_SERVERS=kafka:9092
+      - CONNECT_GROUP_ID=1
       - GROUP_ID=1
       - CONNECT_PLUGIN_PATH=/kafka/connect, /home/kafka/.local/libs
-      - CONFIG_STORAGE_TOPIC=my_connect_configs
-      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-      - STATUS_STORAGE_TOPIC=my_source_connect_statuses
+      - CONNECT_CONFIG_STORAGE_TOPIC=my-connect-onfigs
+      - CONNECT_OFFSET_STORAGE_TOPIC=my-connect-offsets
+      - CONNECT_STATUS_STORAGE_TOPIC=my-source-connect-statuses
+      - CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=1
+      - CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=1
+      - CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=1
+      - CONNECT_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_REST_ADVERTISED_HOST_NAME=connect
+      - CONNECT_REST_PORT=8083
+      - CONNECT_PLUGIN_PATH=/usr/share/java,/usr/share/confluent-hub-components
     depends_on:
       - kafka
       - mysql-main

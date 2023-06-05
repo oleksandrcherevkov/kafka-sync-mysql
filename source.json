@@ -12,7 +12,7 @@
         "database.dbname": "inventory",
         "database.server.name": "dbserver1",
         "database.include.list": "inventory",
-        "database.allowPublicKeyRetrieval":"true",
+        "database.allowPublicKeyRetrieval": "true",
         "database.history.kafka.bootstrap.servers": "kafka:9092",
         "database.history.kafka.topic": "schema-changes.inventory",
         "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",

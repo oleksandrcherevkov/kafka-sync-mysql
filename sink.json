@@ -1,13 +1,14 @@
 {
-  "name": "mysql-sink",
+  "name": "mongo-sink",
   "config": {
-    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
     "tasks.max": "1",
     "topics": "customers",
-    "connection.url": "jdbc:mysql://root:secret@mysql-replica:3306/inventory",
+    "connection.uri": "mongodb://root:example@mongo-replica:27017",
     "transforms": "unwrap",
     "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
     "transforms.unwrap.drop.tombstones": "false",
+    "database": "inventory",
     "auto.create": "true",
     "insert.mode": "upsert",
     "delete.enabled": "true",
